@@ -1,6 +1,9 @@
 package yagows
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+)
 
 type App struct {
 	Router      *Router
@@ -25,6 +28,13 @@ func (a *App) Use(middlewares ...Middleware) {
 }
 
 func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+			w.WriteHeader(HttpInternalError)
+		}
+	}()
+
 	ctx := NewContext(a, req)
 
 	handler := a.Router.Match(req.Method, req.URL.Path)
