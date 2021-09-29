@@ -1,8 +1,13 @@
 package yagows
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type App struct {
@@ -61,4 +66,29 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		w.WriteHeader(HttpInternalError)
 	}
+}
+
+func (a *App) Listen(bindAddress string, port int) {
+	server := &http.Server{
+		Handler: a,
+		Addr:    fmt.Sprintf("%s:%d", bindAddress, port),
+	}
+
+	done := make(chan interface{})
+	go func() {
+		quit := make(chan os.Signal)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+		sig := <-quit
+
+		log.Printf("Received %v, Shutting down...", sig)
+		if err := server.Shutdown(context.Background()); err != nil {
+			log.Printf("HTTP server Shutdown: %v", err)
+		}
+		close(done)
+	}()
+
+	if err := server.ListenAndServe(); err != http.ErrServerClosed {
+		log.Fatalf("HTTP server ListenAndServe: %v", err)
+	}
+	<-done
 }

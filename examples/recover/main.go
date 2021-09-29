@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 	"yagows"
 	"yagows/middleware"
 )
 
+const BindAddress = "localhost"
 const Port = 8090
 
 func rootHandler(c *yagows.Context) {
@@ -23,10 +22,6 @@ func main() {
 
 	app.Router.Get("/", rootHandler)
 
-	server := &http.Server{
-		Handler: app,
-		Addr:    fmt.Sprintf(":%d", Port),
-	}
-	log.Printf("Listening on port %d...", Port)
-	log.Fatal(server.ListenAndServe())
+	log.Printf("Listening on %s:%d...", BindAddress, Port)
+	app.Listen(BindAddress, Port)
 }
