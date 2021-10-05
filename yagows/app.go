@@ -7,17 +7,18 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"syscall"
 )
 
 type App struct {
 	Router      *Router
-	middlewares []Middleware
+	middlewares []RequestHandler
 	config      map[string]string
 }
 
 func NewApp() *App {
-	return &App{Router: NewRouter(), middlewares: []Middleware{}, config: map[string]string{}}
+	return &App{Router: NewRouter(), middlewares: []RequestHandler{}, config: map[string]string{}}
 }
 
 func (a *App) Set(name string, value string) {
@@ -28,33 +29,27 @@ func (a *App) Get(name string) string {
 	return a.config[name]
 }
 
-func (a *App) Use(middlewares ...Middleware) {
-	a.middlewares = middlewares
+func (a *App) Use(middlewares ...RequestHandler) {
+	a.middlewares = append(a.middlewares, middlewares...)
+}
+
+func notFoundHandler(c *Context) {
+	c.Response.StatusCode = HttpNotFound
 }
 
 func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println(err)
-			w.WriteHeader(HttpInternalError)
-		}
-	}()
-
 	ctx := NewContext(a, req)
 
-	handler := a.Router.Match(req.Method, req.URL.Path)
-	if handler == nil {
-		w.WriteHeader(HttpNotFound)
-		return
+	handlers := a.Router.Match(req.Method, req.URL.Path)
+	if handlers == nil {
+		handlers = []RequestHandler{notFoundHandler}
 	}
 
-	for _, m := range a.middlewares {
-		m.PreRequest(ctx)
-	}
-	handler(ctx)
-	for i := len(a.middlewares) - 1; i >= 0; i-- {
-		a.middlewares[i].PostRequest(ctx)
-	}
+	ctx.handlers = []RequestHandler{}
+	ctx.handlers = append(ctx.handlers, a.middlewares...)
+	ctx.handlers = append(ctx.handlers, handlers...)
+
+	ctx.Next()
 
 	for name, headers := range ctx.Response.headers {
 		for _, header := range headers {
@@ -62,8 +57,11 @@ func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	w.WriteHeader(ctx.Response.StatusCode)
+
 	_, err := w.Write(ctx.Response.body)
+	// TODO: better error handling?
 	if err != nil {
+		log.Printf("%v %s\n", err, debug.Stack())
 		w.WriteHeader(HttpInternalError)
 	}
 }
@@ -74,7 +72,7 @@ func (a *App) Listen(bindAddress string, port int) {
 		Addr:    fmt.Sprintf("%s:%d", bindAddress, port),
 	}
 
-	done := make(chan interface{})
+	done := make(chan struct{})
 	go func() {
 		quit := make(chan os.Signal)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

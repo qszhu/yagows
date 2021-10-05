@@ -2,23 +2,24 @@ package main
 
 import (
 	"log"
-	"yagows"
-	"yagows/middleware"
+	. "yagows"
+	. "yagows/middleware"
 )
 
 const BindAddress = "localhost"
 const Port = 8090
 
-func rootHandler(c *yagows.Context) {
+func rootHandler(c *Context) {
 	c.Response.WriteStringBody("ok")
 
 	panic("something wrong")
 }
 
 func main() {
-	app := yagows.NewApp()
+	app := NewApp()
 
-	app.Use(middleware.NewLogMiddleware())
+	app.Use(Logging())
+	app.Use(Recovery())
 
 	app.Router.Get("/", rootHandler)
 

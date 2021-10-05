@@ -3,15 +3,15 @@ package main
 import (
 	"log"
 	"os"
-	"yagows"
-	"yagows/middleware"
+	. "yagows"
+	. "yagows/middleware"
 )
 
 const BindAddress = "localhost"
 const Port = 8090
 const KeyVersion = "VERSION"
 
-func rootHandler(c *yagows.Context) {
+func rootHandler(c *Context) {
 	for name, headers := range c.Request.Headers() {
 		for _, header := range headers {
 			c.Response.WriteHeader(name, header)
@@ -24,14 +24,14 @@ func rootHandler(c *yagows.Context) {
 }
 
 func main() {
-	app := yagows.NewApp()
+	app := NewApp()
 
 	app.Set(KeyVersion, os.Getenv(KeyVersion))
 
-	app.Use(middleware.NewLogMiddleware())
+	app.Use(Logging())
 
 	app.Router.Get("/", rootHandler)
-	app.Router.Get("/healthz", func(*yagows.Context) {})
+	app.Router.Get("/healthz", func(*Context) {})
 
 	log.Printf("Listening on %s:%d...", BindAddress, Port)
 	app.Listen(BindAddress, Port)
