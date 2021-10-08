@@ -29,9 +29,11 @@ func main() {
 	app.Use(Logging())
 	app.Use(Recovery())
 
-	app.Router.Get("/", Timeout(1000), rootHandler)
-	app.Router.Get("/timeout", Timeout(1000), timeoutHandler)
-	app.Router.Get("/panic", Timeout(1000), panicHandler)
+	router := NewRouter()
+	router.Get("/", Timeout(1000), rootHandler)
+	router.Get("/timeout", Timeout(1000), timeoutHandler)
+	router.Get("/panic", Timeout(1000), panicHandler)
+	app.Use(router.Routes())
 
 	log.Printf("Listening on %s:%d...", BindAddress, Port)
 	app.Listen(BindAddress, Port)

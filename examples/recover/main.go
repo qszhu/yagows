@@ -21,7 +21,9 @@ func main() {
 	app.Use(Logging())
 	app.Use(Recovery())
 
-	app.Router.Get("/", rootHandler)
+	router := NewRouter()
+	router.Get("/", rootHandler)
+	app.Use(router.Routes())
 
 	log.Printf("Listening on %s:%d...", BindAddress, Port)
 	app.Listen(BindAddress, Port)

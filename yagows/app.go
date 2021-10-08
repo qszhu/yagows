@@ -12,13 +12,12 @@ import (
 )
 
 type App struct {
-	Router      *Router
 	middlewares []RequestHandler
 	config      map[string]string
 }
 
 func NewApp() *App {
-	return &App{Router: NewRouter(), middlewares: []RequestHandler{}, config: map[string]string{}}
+	return &App{middlewares: []RequestHandler{}, config: map[string]string{}}
 }
 
 func (a *App) Set(name string, value string) {
@@ -33,24 +32,17 @@ func (a *App) Use(middlewares ...RequestHandler) {
 	a.middlewares = append(a.middlewares, middlewares...)
 }
 
-func notFoundHandler(c *Context) {
-	c.Response.StatusCode = HttpNotFound
-}
 
 func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := NewContext(a, req)
 
-	handlers := a.Router.Match(req.Method, req.URL.Path)
-	if handlers == nil {
-		handlers = []RequestHandler{notFoundHandler}
-	}
-
 	ctx.handlers = []RequestHandler{}
 	ctx.handlers = append(ctx.handlers, a.middlewares...)
-	ctx.handlers = append(ctx.handlers, handlers...)
 
+	// kick off handlers
 	ctx.Next()
 
+	// writing response
 	for name, headers := range ctx.Response.headers {
 		for _, header := range headers {
 			w.Header().Set(name, header)

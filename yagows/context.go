@@ -33,3 +33,7 @@ func (c *Context) Next() {
 func (c *Context) BaseContext() context.Context {
 	return c.Request.request.Context()
 }
+
+func (c *Context) use(handlers ...RequestHandler) {
+	c.handlers = append(c.handlers, handlers...)
+}

@@ -30,8 +30,10 @@ func main() {
 
 	app.Use(Logging())
 
-	app.Router.Get("/", rootHandler)
-	app.Router.Get("/healthz", func(*Context) {})
+	router := NewRouter()
+	router.Get("/", rootHandler)
+	router.Get("/healthz", func(*Context) {})
+	app.Use(router.Routes())
 
 	log.Printf("Listening on %s:%d...", BindAddress, Port)
 	app.Listen(BindAddress, Port)

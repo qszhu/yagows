@@ -21,7 +21,9 @@ func main() {
 
 	app.Use(Logging())
 
-	app.Router.Get("/", rootHandler)
+	router := NewRouter()
+	router.Get("/", rootHandler)
+	app.Use(router.Routes())
 
 	log.Printf("pid: %d", os.Getpid())
 	log.Printf("Listening on %s:%d...", BindAddress, Port)
