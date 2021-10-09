@@ -32,7 +32,6 @@ func (a *App) Use(middlewares ...RequestHandler) {
 	a.middlewares = append(a.middlewares, middlewares...)
 }
 
-
 func (a *App) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	ctx := NewContext(a, req)
 

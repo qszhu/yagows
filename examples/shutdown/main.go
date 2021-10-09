@@ -6,6 +6,7 @@ import (
 	"time"
 	. "yagows"
 	. "yagows/middleware"
+	. "yagows/router"
 )
 
 const BindAddress = "localhost"

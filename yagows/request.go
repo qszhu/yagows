@@ -24,3 +24,7 @@ func (r *Request) Method() string {
 func (r *Request) Path() string {
 	return r.request.URL.Path
 }
+
+func (r *Request) RawRequest() *http.Request {
+	return r.request
+}

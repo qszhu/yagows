@@ -11,6 +11,7 @@ type Context struct {
 	App      *App
 	handlers []RequestHandler
 	idx      int
+	Params   map[string]string
 }
 
 func NewContext(app *App, req *http.Request) *Context {
@@ -34,6 +35,6 @@ func (c *Context) BaseContext() context.Context {
 	return c.Request.request.Context()
 }
 
-func (c *Context) use(handlers ...RequestHandler) {
+func (c *Context) Use(handlers ...RequestHandler) {
 	c.handlers = append(c.handlers, handlers...)
 }
