@@ -5,7 +5,7 @@ import (
 	"log"
 	. "yagows"
 	. "yagows/middleware"
-	. "yagows/router"
+	. "yagows/middleware/router"
 )
 
 const BindAddress = "localhost"
