@@ -8,7 +8,7 @@ import (
 	. "yagows/middleware/router"
 )
 
-const BindAddress = "localhost"
+const BindAddress = "0.0.0.0"
 const Port = 8090
 const KeyVersion = "VERSION"
 
